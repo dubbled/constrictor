@@ -24,6 +24,6 @@ func main() {
 ```
 func main() {
     // read 3000 bytes per second
-    _ := constrict.NewWriter(os.Stderr, os.DevNull, 3000)
+    _ := constrict.NewWriter(os.DevNull, os.Stdin, 3000)
 }
 ```
