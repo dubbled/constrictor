@@ -1,4 +1,4 @@
-package constrict
+package constrictor
 
 import (
 	"io"
