@@ -6,9 +6,8 @@ import (
 )
 
 type constrictor struct {
-	speed   int
-	active  bool
-	mutable bool
+	speed  int
+	active bool
 }
 
 type ReadConstrictor struct {
@@ -22,7 +21,7 @@ type WriteConstrictor struct {
 	dst io.Writer
 }
 
-func NewReader(r io.Reader, speed int, mut bool) *ReadConstrictor {
+func NewReader(r io.Reader, speed int) *ReadConstrictor {
 	rc := &ReadConstrictor{
 		src: r,
 	}
@@ -51,14 +50,13 @@ func (c *ReadConstrictor) Read() ([]byte, error) {
 	return output, nil
 }
 
-func NewWriter(src io.Reader, dst io.Writer, speed int, mut bool) *WriteConstrictor {
+func NewWriter(dst io.Writer, src io.Reader, speed int) *WriteConstrictor {
 	wc := &WriteConstrictor{
 		src: src,
 		dst: dst,
 	}
 
 	wc.speed = speed
-	wc.mutable = mut
 
 	return wc
 }

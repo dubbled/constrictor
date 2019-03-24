@@ -1,6 +1,8 @@
-package constrict
+package constrictor
 
 import (
+	// "encoding/hex"
+	// "errors"
 	"fmt"
 	"io"
 	"os"
@@ -8,44 +10,72 @@ import (
 	"time"
 )
 
-func TestReader(t *testing.T) {
+/* linux only currently
+func TestGenerateInput(t *testing.T) {
 	input, err := os.Open("/dev/urandom")
+	if err != nil {
+		t.Error(err)
+	}
+
+	var inputLength int64 = 10000
+	limitedInput := io.LimitReader(input, inputLength)
+
+	f, err := os.OpenFile("test_input.txt", os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		t.Error(err)
+	}
+
+	output := hex.NewEncoder(f)
+	n, err := io.Copy(output, limitedInput)
+	if err != nil {
+		t.Error(err)
+	} else if n != inputLength {
+		errors.New("error: input/output length mismatch")
+	}
+}
+*/
+
+func TestReader(t *testing.T) {
+	input, err := os.Open("test_input.txt")
 	if err != nil {
 		t.Error(err)
 	}
 	defer input.Close()
 
-	limited := io.LimitReader(input, 2000)
+	var inputLength int64 = 2000
+	limited := io.LimitReader(input, inputLength)
+
 	t1 := time.Now()
-	output, err := NewReader(limited, 700, false).Read()
+	var speed int = 700
+	output, err := NewReader(limited, 700).Read()
 	if err != nil {
-		fmt.Println(err)
 		t.Error(err)
 	}
 
-	fmt.Printf("read %d bytes in %f seconds\n", len(output), time.Now().Sub(t1).Seconds())
+	elapsed := time.Now().Sub(t1).Seconds()
+	fmt.Printf("read %d bytes in %.02f seconds\n", len(output), elapsed)
 }
 
 func TestWriter(t *testing.T) {
-	input, err := os.Open("/dev/urandom")
+	input, err := os.Open("test_input.txt")
 	if err != nil {
 		t.Error(err)
 	}
 	defer input.Close()
 
-	var byteCount int64
-	byteCount = 5000
-	limited := io.LimitReader(input, byteCount)
+	var byteCount int64 = 5000
+	limitedInput := io.LimitReader(input, byteCount)
 	t1 := time.Now()
-	output, err := os.OpenFile("/dev/null", os.O_RDWR, 0644)
+	output, err := os.OpenFile(os.DevNull, os.O_WRONLY, 0644)
 	if err != nil {
-		fmt.Println(err)
 		t.Error(err)
 	}
 
-	if err = NewWriter(limited, output, 300, false).Write(); err != nil {
+	var speed int = 1000
+	if err = NewWriter(output, limitedInput, speed).Write(); err != nil {
 		t.Error(err)
 	}
 
-	fmt.Printf("wrote %d bytes in %f seconds\n", byteCount, time.Now().Sub(t1).Seconds())
+	elapsed := time.Now().Sub(t1).Seconds()
+	fmt.Printf("wrote %d bytes in %.02f seconds\n", byteCount, elapsed)
 }
