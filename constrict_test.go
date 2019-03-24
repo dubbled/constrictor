@@ -47,7 +47,7 @@ func TestReader(t *testing.T) {
 
 	t1 := time.Now()
 	var speed int = 700
-	output, err := NewReader(limited, 700).Read()
+	output, err := NewReader(limited, speed).Read()
 	if err != nil {
 		t.Error(err)
 	}
