@@ -1,11 +1,9 @@
 # constrictor
-======
 
 Facilitates throttling of the following pipelines:
     1. From io.Reader to []byte
+    
     2. From io.Reader to io.Writer
-
-======
 
 #### Examples
 (excluded error checking)
