@@ -16,7 +16,7 @@ func main() {
     defer response.Close()
 
     // read 1000 bytes per second
-    res, _ := constrict.NewReader(response.Body, 1000)
+    res, _ := constrict.NewReader(response.Body, 1000).Read()
 }
 ```
 
@@ -24,6 +24,6 @@ func main() {
 ```
 func main() {
     // read 3000 bytes per second
-    _ := constrict.NewWriter(os.DevNull, os.Stdin, 3000)
+    _ := constrict.NewWriter(os.DevNull, os.Stdin, 3000).Write()
 }
 ```
