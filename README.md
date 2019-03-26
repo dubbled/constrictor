@@ -19,7 +19,7 @@ func main() {
     defer file.Close()
 
     // read 1000 bytes per second
-    constrict.NewReader(response.Body, 1000).WriteTo(file)
+    bytesOut, _ := constrict.NewReader(response.Body, 1000).WriteTo(file)
 }
 ```
 
@@ -28,6 +28,6 @@ func main() {
 func main() {
     // read 3000 bytes per second
     input := make([]byte, 1024 * 1024)
-    constrict.NewReader(os.Stdin, 3000).Read(input)
+    bytesOut, _ := constrict.NewReader(os.Stdin, 3000).Read(input)
 }
 ```
