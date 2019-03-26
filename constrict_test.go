@@ -1,8 +1,7 @@
 package constrictor
 
 import (
-	// "encoding/hex"
-	// "errors"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -35,47 +34,54 @@ func TestGenerateInput(t *testing.T) {
 }
 */
 
-func TestReader(t *testing.T) {
+func TestReaderToWriter(t *testing.T) {
 	input, err := os.Open("test_input.txt")
 	if err != nil {
 		t.Error(err)
 	}
 	defer input.Close()
 
-	var inputLength int64 = 2000
-	limited := io.LimitReader(input, inputLength)
-
-	t1 := time.Now()
-	var speed int = 700
-	output, err := NewReader(limited, speed).Read()
-	if err != nil {
-		t.Error(err)
-	}
-
-	elapsed := time.Now().Sub(t1).Seconds()
-	fmt.Printf("read %d bytes in %.02f seconds\n", len(output), elapsed)
-}
-
-func TestWriter(t *testing.T) {
-	input, err := os.Open("test_input.txt")
-	if err != nil {
-		t.Error(err)
-	}
-	defer input.Close()
-
-	var byteCount int64 = 5000
+	var byteCount int64 = 9000
 	limitedInput := io.LimitReader(input, byteCount)
-	t1 := time.Now()
 	output, err := os.OpenFile(os.DevNull, os.O_WRONLY, 0644)
 	if err != nil {
 		t.Error(err)
 	}
 
-	var speed int = 1000
-	if err = NewWriter(output, limitedInput, speed).Write(); err != nil {
+	t1 := time.Now()
+	written, err := NewReader(limitedInput, 2000).WriteTo(output)
+	if err != nil {
 		t.Error(err)
 	}
 
+	checkResults(t, byteCount, written, t1)
+}
+
+func TestReaderToBuffer(t *testing.T) {
+	input, err := os.Open("test_input.txt")
+	if err != nil {
+		t.Error(err)
+	}
+	defer input.Close()
+
+	var byteCount int64 = 1000
+	limitedInput := io.LimitReader(input, byteCount)
+	output := make([]byte, byteCount)
+
+	t1 := time.Now()
+	written, err := NewReader(limitedInput, 2000).Read(output)
+	if err != nil {
+		t.Error(err)
+	}
+
+	checkResults(t, byteCount, int64(written), t1)
+}
+
+func checkResults(t *testing.T, expected, written int64, t1 time.Time) {
+	if expected != written {
+		t.Error(errors.New("error: input/output mismatch"))
+	}
+
 	elapsed := time.Now().Sub(t1).Seconds()
-	fmt.Printf("wrote %d bytes in %.02f seconds\n", byteCount, elapsed)
+	fmt.Printf("wrote %d bytes in %.02f seconds\n", written, elapsed)
 }

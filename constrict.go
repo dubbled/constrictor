@@ -6,79 +6,64 @@ import (
 )
 
 type constrictor struct {
-	speed  int
-	active bool
+	speed int
 }
 
-type ReadConstrictor struct {
+type Reader struct {
 	constrictor
-	src io.Reader
+	r io.Reader
 }
 
-type WriteConstrictor struct {
-	constrictor
-	src io.Reader
-	dst io.Writer
-}
-
-func NewReader(r io.Reader, speed int) *ReadConstrictor {
-	rc := &ReadConstrictor{
-		src: r,
+func NewReader(r io.Reader, speed int) *Reader {
+	rc := &Reader{
+		r: r,
 	}
 	rc.speed = speed
 	return rc
 }
 
-func (c *ReadConstrictor) Read() ([]byte, error) {
-	c.active = true
-	output := []byte{}
+func (r *Reader) WriteTo(w io.Writer) (int64, error) {
+	throttle := time.Tick(time.Second)
+	var count int64
+	buf := make([]byte, r.speed)
 	for {
-		buf := make([]byte, c.speed)
-		n, err := c.src.Read(buf)
-		if n > 0 {
-			output = append(output, buf[:n]...)
-		} else if err == io.EOF {
+		n, err := r.r.Read(buf)
+		if err == io.EOF {
 			break
-		} else {
-			c.active = false
-			return output, err
+		} else if err != nil {
+			return count, err
 		}
-		time.Sleep(time.Second)
+
+		n, err = w.Write(buf[:n])
+		if err != nil {
+			return count, err
+		}
+
+		count += int64(n)
+		<-throttle
 	}
 
-	c.active = false
-	return output, nil
+	return count, nil
 }
 
-func NewWriter(dst io.Writer, src io.Reader, speed int) *WriteConstrictor {
-	wc := &WriteConstrictor{
-		src: src,
-		dst: dst,
-	}
-
-	wc.speed = speed
-
-	return wc
-}
-
-func (c *WriteConstrictor) Write() error {
-	c.active = true
+func (r *Reader) Read(p []byte) (int, error) {
+	throttle := time.Tick(time.Second)
+	var count int
+	buf := make([]byte, r.speed)
 	for {
-		buf := make([]byte, c.speed)
-		n, err := c.src.Read(buf)
+		n, err := r.r.Read(buf)
 		if n > 0 {
-			_, err = c.dst.Write(buf[:n])
-			if err != nil {
-				return err
-			}
-		} else if err == io.EOF {
-			break
-		} else {
-			c.active = false
-			return err
+			p = append(p, buf[:n]...)
+			count += n
 		}
-		time.Sleep(time.Second)
+
+		if err == io.EOF {
+			break
+		} else if err != nil {
+			return count, err
+		}
+		<-throttle
 	}
-	c.active = false
-	return nil
+
+	return count, nil
 }

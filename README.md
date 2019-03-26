@@ -9,21 +9,25 @@ Facilitates throttling of the following pipelines:
 #### Examples
 (excluded error checking)
 
-###### ReadConstrictor
+###### Reader to Writer
 ```
 func main() {
     response, _ := http.Get("google.com")
     defer response.Close()
 
+    file, _ := os.OpenFile("google.html", os.O_WRONLY, 0644)
+    defer file.Close()
+
     // read 1000 bytes per second
-    res, _ := constrict.NewReader(response.Body, 1000)
+    constrict.NewReader(response.Body, 1000).WriteTo(file)
 }
 ```
 
-###### WriteConstrictor
+###### Reader to Byte Slice ([]byte)
 ```
 func main() {
     // read 3000 bytes per second
-    _ := constrict.NewWriter(os.DevNull, os.Stdin, 3000)
+    input := make([]byte, 1024 * 1024)
+    constrict.NewReader(os.Stdin, 3000).Read(input)
 }
 ```
