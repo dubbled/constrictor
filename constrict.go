@@ -2,7 +2,6 @@ package constrictor
 
 import (
 	"io"
-	"time"
 )
 
 type constrictor struct {
@@ -27,34 +26,38 @@ func (r *Reader) WriteTo(w io.Writer) (int64, error) {
 	var count int64
 	buf := make([]byte, r.speed)
 	for {
-		n, err := r.r.Read(buf)
+		read, err := r.r.Read(buf)
+		if read > 0 {
+			written, err := w.Write(buf[:read])
+			count += int64(written)
+			if err != nil {
+				return count, err
+			}
+		}
+
 		if err == io.EOF {
 			break
 		} else if err != nil {
 			return count, err
 		}
-
-		n, err = w.Write(buf[:n])
-		if err != nil {
-			return count, err
-		}
-
-		count += int64(n)
-		<-throttle
 	}
 
 	return count, nil
 }
 
 func (r *Reader) Read(p []byte) (int, error) {
+	if len(p) == 0 {
+		return 0, nil
+	}
+
 	throttle := time.Tick(time.Second)
 	var count int
 	buf := make([]byte, r.speed)
 	for {
-		n, err := r.r.Read(buf)
-		if n > 0 {
-			p = append(p, buf[:n]...)
-			count += n
+		read, err := r.r.Read(buf)
+		if read > 0 {
+			p = append(p, buf[:read]...)
+			count += read
 		}
 
 		if err == io.EOF {
@@ -62,7 +65,6 @@ func (r *Reader) Read(p []byte) (int, error) {
 		} else if err != nil {
 			return count, err
 		}
-		<-throttle
 	}
 
 	return count, nil
