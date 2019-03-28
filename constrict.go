@@ -2,6 +2,7 @@ package constrictor
 
 import (
 	"io"
+	"time"
 )
 
 type constrictor struct {
@@ -40,6 +41,8 @@ func (r *Reader) WriteTo(w io.Writer) (int64, error) {
 		} else if err != nil {
 			return count, err
 		}
+
+		<-throttle
 	}
 
 	return count, nil
@@ -65,6 +68,8 @@ func (r *Reader) Read(p []byte) (int, error) {
 		} else if err != nil {
 			return count, err
 		}
+
+		<-throttle
 	}
 
 	return count, nil

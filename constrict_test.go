@@ -49,12 +49,13 @@ func TestReaderToWriter(t *testing.T) {
 	}
 
 	t1 := time.Now()
-	written, err := NewReader(limitedInput, 2000).WriteTo(output)
+	rate := 4000
+	written, err := NewReader(limitedInput, rate).WriteTo(output)
 	if err != nil {
 		t.Error(err)
 	}
 
-	checkResults(t, byteCount, written, t1)
+	checkResults(t, byteCount, written, int64(rate), t1)
 }
 
 func TestReaderToBuffer(t *testing.T) {
@@ -64,24 +65,25 @@ func TestReaderToBuffer(t *testing.T) {
 	}
 	defer input.Close()
 
-	var byteCount int64 = 1000
+	var byteCount int64 = 4000
 	limitedInput := io.LimitReader(input, byteCount)
 	output := make([]byte, byteCount)
 
 	t1 := time.Now()
-	written, err := NewReader(limitedInput, 2000).Read(output)
+	rate := 2000
+	written, err := NewReader(limitedInput, rate).Read(output)
 	if err != nil {
 		t.Error(err)
 	}
 
-	checkResults(t, byteCount, int64(written), t1)
+	checkResults(t, byteCount, int64(written), int64(rate), t1)
 }
 
-func checkResults(t *testing.T, expected, written int64, t1 time.Time) {
+func checkResults(t *testing.T, expected, written, rate int64, t1 time.Time) {
 	if expected != written {
 		t.Error(errors.New("error: input/output mismatch"))
 	}
 
 	elapsed := time.Now().Sub(t1).Seconds()
-	fmt.Printf("wrote %d bytes in %.02f seconds\n", written, elapsed)
+	fmt.Printf("wrote %d bytes in %.02f seconds @ rate %d bytes per second\n", written, elapsed, rate)
 }
